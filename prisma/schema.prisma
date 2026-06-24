@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model cities {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String?
+  state        String?
+  sports_teams sports_teams[]
+}
+
+model sports_teams {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sport_       String? @map("sport ")
+  name_        String? @map("name ")
+  start_year   Int?
+  stadium_name String?
+  city_id      String? @db.Uuid
+  cities       cities? @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "city_id")
+}
