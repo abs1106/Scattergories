@@ -1,4 +1,4 @@
-"use strict";
+git "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const client_1 = require("./generated/prisma/client");
