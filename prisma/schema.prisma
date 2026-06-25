@@ -7,19 +7,18 @@ datasource db {
   provider = "postgresql"
 }
 
-model cities {
-  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String?
-  state        String?
-  sports_teams sports_teams[]
+model Answers {
+  answer_id String  @id @db.Uuid
+  game_id   String?
+  username  String?
+  answer    String?
+  Game      Game    @relation(fields: [answer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_answer_id")
 }
 
-model sports_teams {
-  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sport_       String? @map("sport ")
-  name_        String? @map("name ")
-  start_year   Int?
-  stadium_name String?
-  city_id      String? @db.Uuid
-  cities       cities? @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "city_id")
+model Game {
+  id        String   @id @db.Uuid
+  room_code String?
+  letter    String?  @db.Char
+  topic     String?
+  Answers   Answers?
 }
