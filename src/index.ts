@@ -1,15 +1,9 @@
-import 'dotenv/config';
-import { PrismaClient } from './generated/prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-//allows uses of different libraries 
+const express = require("express");
+const app = express();
+const PORT = 5432;
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+app.use(express.json());
 
-(async () => {
-  console.log('Prisma Client connected');
-  const cities = await prisma.cities.findMany();
-  console.log('Cities:', cities);
-
-  await prisma.$disconnect();
-})();
+app.get('/', (req, res) => {
+    res.send("Root Route");
+});
