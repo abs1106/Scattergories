@@ -1,12 +1,22 @@
-const express = require("express");
+import "dotenv/config";
+import express from "express";
+import { PrismaClient } from "./generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 const app = express();
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const prisma = new PrismaClient({ adapter });
+
+app.use(express.json());
 const PORT = 5432;
 
 app.use(express.json());
 
 //Generating the random room code for the rooms with thec help of copilot 
 
-function generateRoomCode() {
+function getRoomCode() {
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const numbers = "0123456789";
 
@@ -25,7 +35,6 @@ function generateRoomCode() {
     return code;
 
 }
-
 //Generates a random letter for the topic
 
 function getRandomLetter() {
@@ -65,14 +74,27 @@ return topics[Math.floor(Math.random() * topics.length)]
 
 
 
-app.post('/start', async (req, res) => {
-    const roomCode = generateRoomCode();
-    const letter = getRandomLetter;
-    res.json ({
-        message: "Room created.",
-        roomCode: roomCode, 
-        letter: letter
+app.post('/games', async (req, res) => {
+  try{
+    const roomCode = getRoomCode();
+    const letter = getRandomLetter();
+    const topic = getTopic()
+
+    const game = await prisma.game.create({
+      data: {
+        room_code: roomCode,
+        letter: letter,
+        topic: topic,
+      },
     });
+      return res.json(game);
+
+  } catch(error){
+     return res.status(500).json({
+      message: "Failed to create room."
+    });
+  }
+
 });
 
 app.listen(5432);

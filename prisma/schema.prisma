@@ -16,7 +16,7 @@ model Answers {
 }
 
 model Game {
-  id        String   @id @db.Uuid
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   room_code String?
   letter    String?  @db.Char
   topic     String?
