@@ -27,11 +27,20 @@ function generateRoomCode() {
 
 }
 
+//Generates a random letter for the topic
+
+function getRandomLetter() {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    return letters[Math.floor(Math.random() * letters.length)];
+}
+
 app.post('/start', async (req, res) => {
     const roomCode = generateRoomCode();
+    const letter = getRandomLetter;
     res.json ({
         message: "Room created.",
-        roomCode: roomCode
+        roomCode: roomCode, 
+        letter: letter
     });
 });
 
