@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": false,
-    "types": ["node"]
+    "types": ["node", "express"]
   },
   "include": [
     "src/**/*",
