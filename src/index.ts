@@ -108,6 +108,39 @@ app.post('/games', async (req: Request, res: Response) => {
     }
 });
 
+app.post("/answers", async (req: Request, res: Response) => {
+  try {
+    const {roomCode, username, answer} = req.body;
+    const game = await prisma.game.findUnique ({
+      where: {
+        room_code: roomCode,
+      },
+    });
+
+    if (!game) {
+      return res.status(404).json ({
+        error: "Game not found.",
+      })
+    }
+
+    const accepted = answer && answer[0].toUpperCase() === game.letter.toUpperCase();
+      if (!accepted) {
+        return res.status(404).json ({
+          accepted: false,
+          error: `Answer must start with thhe letter ${game.letter}.`,
+        });
+      }
+
+      return res.status(200).json ({
+        accepted: true,
+      });
+    } catch (error) {
+      return res.status(500).json ({
+      error: "Failed to validate answer.",
+    });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log('App is running on port ${PORT}');
+  console.log(`App is running on port ${PORT}`);
 });
