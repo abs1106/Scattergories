@@ -1,12 +1,12 @@
 import "dotenv/config";
-import express from "express";
+import express, { Request, Response } from "express";
 import { PrismaClient } from "./generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+
 const app = express();
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
 });
-
 const prisma = new PrismaClient({ adapter });
 
 app.use(express.json());
@@ -70,31 +70,44 @@ return topics[Math.floor(Math.random() * topics.length)]
 
 }
 
+app.post('/games', async (req: Request, res: Response) => {
+  try {
+    const {roomCode} = req.body;
+    const existingGame = await prisma.game.findUnique ({
+      where: {
+        room_code: roomCode,
+      },
+    });
+    if (existingGame) {
+      return res.status(409).json ({
+        error: "Room code already exists. Please try again with a different code.",
+      });
+    }
 
-
-
-
-app.post('/games', async (req, res) => {
-  try{
-    const roomCode = getRoomCode();
+    /* const roomCode = getRoomCode(); */
     const letter = getRandomLetter();
     const topic = getTopic()
 
     const game = await prisma.game.create({
       data: {
         room_code: roomCode,
-        letter: letter,
-        topic: topic,
+        letter,
+        topic,
       },
     });
-      return res.json(game);
 
-  } catch(error){
-     return res.status(500).json({
-      message: "Failed to create room."
-    });
-  }
-
+      return res.status(201).json ({
+        roomCode: game.room_code,
+        letter: game.letter,
+        topic: game.topic,
+      });
+    } catch (error) {
+      return res.status(500).json ({
+        error: "Failed to creat room.",
+      });
+    }
 });
 
-app.listen(5432);
+app.listen(PORT, () => {
+  console.log('App is running on port ${PORT}');
+});
