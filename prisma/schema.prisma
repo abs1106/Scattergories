@@ -9,16 +9,24 @@ datasource db {
 
 model Answers {
   answer_id String  @id @db.Uuid
-  game_id   String  @db.Uuid
+  game_id   String?
   username  String?
   answer    String?
-  Game      Game    @relation(fields: [game_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_answer_id")
+  Game      Game    @relation(fields: [answer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_answer_id")
 }
 
 model Game {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id        String   @id @db.Uuid
   room_code String?
   letter    String?  @db.Char
   topic     String?
-  Answers   Answers[]
+  Answers   Answers?
+  Scores    Scores?
+}
+
+model Scores {
+  id           String  @id @db.Uuid
+  username     String? @db.Char
+  total_points Int?
+  Game         Game    @relation(fields: [id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scores_fkey")
 }
