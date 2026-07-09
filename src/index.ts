@@ -12,8 +12,6 @@ const prisma = new PrismaClient({ adapter });
 app.use(express.json());
 const PORT = 5432;
 
-app.use(express.json());
-
 //Generating the random room code for the rooms with thec help of copilot 
 
 function getRoomCode() {
@@ -73,7 +71,7 @@ return topics[Math.floor(Math.random() * topics.length)]
 app.post('/games', async (req: Request, res: Response) => {
   try {
     const {roomCode} = req.body;
-    const existingGame = await prisma.game.findUnique ({
+    const existingGame = await prisma.game.findFirst ({
       where: {
         room_code: roomCode,
       },
@@ -93,7 +91,7 @@ app.post('/games', async (req: Request, res: Response) => {
         room_code: roomCode,
         letter,
         topic,
-      },
+      } as any,
     });
 
       return res.status(201).json ({
@@ -103,39 +101,88 @@ app.post('/games', async (req: Request, res: Response) => {
       });
     } catch (error) {
       return res.status(500).json ({
-        error: "Failed to creat room.",
+        error: "Failed to create room.",
       });
     }
+});
+
+app.get("/games", async (req: Request, res: Response) => {
+  try {
+    const games = await prisma.game.findMany();
+
+    return res.status(200).json(
+      games.map(game => ({
+        roomCode: game.room_code,
+        letter: game.letter,
+        topic: game.topic,
+      }))
+    );
+  } catch (error) {
+    return res.status(500).json({
+      error: "Failed to retrieve games."
+    });
+  }
 });
 
 app.post("/answers", async (req: Request, res: Response) => {
   try {
     const {roomCode, username, answer} = req.body;
-    const game = await prisma.game.findUnique ({
+
+    if (!roomCode || !username || !answer) {
+      return res.status(400).json({
+        error: "Room code, username and answer must be provided.",
+      });
+    }
+
+    const game = await prisma.game.findFirst({
       where: {
         room_code: roomCode,
       },
     });
 
-    if (!game) {
-      return res.status(404).json ({
+    if (!game || !game.letter) {
+      return res.status(404).json({
         error: "Game not found.",
-      })
+      });
     }
 
-    const accepted = answer && answer[0].toUpperCase() === game.letter.toUpperCase();
-      if (!accepted) {
-        return res.status(404).json ({
-          accepted: false,
-          error: `Answer must start with thhe letter ${game.letter}.`,
-        });
-      }
+    const accepted = answer.charAt(0).toUpperCase() === game.letter.toUpperCase();
 
-      return res.status(200).json ({
-        accepted: true,
+    if (!accepted) {
+      return res.status(400).json({
+        accepted: false,
+        error: `Answer must start with the letter ${game.letter}.`
       });
-    } catch (error) {
-      return res.status(500).json ({
+    }
+
+    const existingAnswer = await prisma.answers.findFirst({
+      where: {
+        room_code: roomCode,
+        answer: answer,
+      },
+    });
+
+    if (existingAnswer) {
+      return res.status(409).json({
+        error: "Answer already taken",
+      });
+    }
+
+    await prisma.answers.create({
+      data: {
+        room_code: roomCode,
+        username,
+        answer,
+      },
+    });
+
+    return res.status(200).json({
+      accepted: true,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
       error: "Failed to validate answer.",
     });
   }
